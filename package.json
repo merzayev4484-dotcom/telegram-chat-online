@@ -1,0 +1,7 @@
+{
+  "name": "tg-chat",
+  "version": "1.0.0",
+  "description": "Telegramga o'xshash guruhli chat (Google bilan kirish, egasi tasdiqlaydi)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="uz"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat</title>
+<style>
+:root{--blue:#3390ec;--bg:#e6ebee;--line:#e4e8ec;--muted:#7a8794}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#222}
+button{background:var(--blue);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-size:15px;cursor:pointer}
+button:hover{filter:brightness(1.07)}button.ghost{background:#eef1f4;color:#333}button.red{background:#e5484d}button:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=email]{width:100%;padding:12px 14px;border:1px solid #ccd3da;border-radius:10px;font-size:16px;outline:none;background:#fff;color:#222}
+input:focus{border-color:var(--blue)}
+.center{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 6px 30px #0002;padding:32px;width:100%;max-width:380px;text-align:center}
+.card h1{margin:0 0 6px;font-size:24px}.card p{color:#667;margin:6px 0 18px;line-height:1.45}
+.card input{margin-bottom:12px}#gbtn{display:flex;justify-content:center;min-height:44px}
+#app{display:none;height:100%}
+#side{width:340px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+#side>header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+#side>header .who{flex:1;min-width:0}#side>header b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#side>header small{color:var(--muted)}
+.iconbtn{background:#eef1f4;color:#333;padding:8px 10px;font-size:16px;position:relative}
+.iconbtn .n{position:absolute;top:-6px;right:-6px;background:#e5484d;color:#fff;border-radius:10px;font-size:11px;padding:1px 6px}
+#list{overflow:auto;flex:1}
+.sec{padding:12px 16px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer}
+.item:hover{background:#f4f6f8}.item.active{background:#dbeafc}
+.item .t{flex:1;min-width:0}.item .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .t small{color:var(--muted)}.item .t small.on{color:#2a9d3f}
+.badge{background:var(--blue);color:#fff;border-radius:10px;padding:1px 8px;font-size:12px}
+.av{border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;object-fit:cover}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;background:#dfe6ea}
+#main>header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);min-height:62px}
+#back{display:none;background:#eef1f4;color:#333;padding:8px 12px}
+#main>header .t b{display:block}#main>header .t small{color:var(--muted)}
+#msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:4px}
+.empty{margin:auto;background:#0000001a;color:#fff;padding:6px 14px;border-radius:14px;font-size:14px}
+.bubble{max-width:min(75%,520px);background:#fff;padding:7px 11px 5px;border-radius:14px 14px 14px 4px;align-self:flex-start;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;box-shadow:0 1px 1px #0001}
+.bubble.me{background:#eeffde;align-self:flex-end;border-radius:14px 14px 4px 14px}
+.bubble .w{font-size:13px;font-weight:600;margin-bottom:2px}
+.bubble img{display:block;max-width:100%;max-height:340px;border-radius:10px;margin:2px 0 4px;cursor:zoom-in}
+.bubble small{display:block;text-align:right;color:var(--muted);font-size:11px;margin-top:1px}
+#preview{display:none;padding:8px 14px;background:#fff;border-top:1px solid var(--line);align-items:center;gap:10px}
+#preview img{height:56px;border-radius:8px}
+#bar{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid var(--line);align-items:center}
+#bar input[type=text]{flex:1;border-radius:22px}
+#attach{cursor:pointer;font-size:22px;padding:0 6px;user-select:none}
+#modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+#panel{background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+#panel>header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+#tabs{display:flex;gap:6px;padding:10px 14px 0}#tabs button{background:#eef1f4;color:#333}#tabs button.on{background:var(--blue);color:#fff}
+#adminBody{padding:14px 18px 18px;overflow:auto}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f2f4}
+.row .t{flex:1;min-width:0}.row .t small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.gbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.gbox .top{display:flex;gap:8px;margin-bottom:8px}.gbox .top input{flex:1;padding:8px 10px}
+.members label{display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0;font-size:14px}
+.hint{color:var(--muted);font-size:14px;padding:10px 0}
+@media(max-width:700px){#side{width:100%}#app.chat-open #side{display:none}#app:not(.chat-open) #main{display:none}#back{display:inline-block}.bubble{max-width:88%}}
+</style>
+<script>
+window.onGoogleLibraryLoad = async () => {
+  await cfgP;
+  if (!cfg.clientId) return;
+  google.accounts.id.initialize({ client_id: cfg.clientId, callback: r => post('/auth/google', { credential: r.credential }).then(boot).catch(e => alert(e.message)) });
+  google.accounts.id.renderButton(document.getElementById('gbtn'), { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with' });
+};
+</script>
+</head><body>
+
+<div id="s-login" class="center"><div class="card">
+  <h1>💬 Chat</h1><p>Gmail hisobingiz bilan kiring. Egasi tasdiqlagandan keyin yozishmalarga qo'shilasiz.</p>
+  <div id="gbtn"></div>
+  <form id="devForm" style="display:none;margin-top:16px"><p style="font-size:13px">⚠ Sinov rejimi (DEV_LOGIN)</p>
+    <input type="email" id="devEmail" placeholder="email@gmail.com" required><input type="text" id="devName" placeholder="Ism"><button>Kirish</button></form>
+</div></div>
+
+<div id="s-name" class="center"><div class="card">
+  <h1>Ismingiz nima?</h1><p>Boshqalar sizni shu nom bilan ko'radi.</p>
+  <input type="text" id="nameInput" maxlength="30" placeholder="Ism"><button id="nameSave">Davom etish</button>
+</div></div>
+
+<div id="s-wait" class="center"><div class="card">
+  <h1 id="waitTitle"></h1><p id="waitText"></p><button class="ghost" onclick="logout()">Chiqish</button>
+</div></div>
+
+<div id="app">
+  <aside id="side">
+    <header>
+      <span id="meAv"></span>
+      <div class="who"><b id="meName"></b><small id="meRole"></small></div>
+      <button class="iconbtn" id="btnAdmin" style="display:none" title="Boshqarish">⚙<span class="n" id="pendN" style="display:none"></span></button>
+      <button class="iconbtn" onclick="logout()" title="Chiqish">⎋</button>
+    </header>
+    <div id="list"></div>
+  </aside>
+  <section id="main">
+    <header><button id="back" onclick="closeChat()">←</button><span id="chAv"></span><div class="t"><b id="chTitle"></b><small id="chSub"></small></div></header>
+    <div id="msgs"></div>
+    <div id="preview"><img id="prevImg"><button class="ghost" onclick="clearImg()">✕</button></div>
+    <div id="bar">
+      <label id="attach" title="Rasm yuborish">📎<input type="file" id="file" accept="image/*" hidden></label>
+      <input type="text" id="text" placeholder="Xabar yozing..." autocomplete="off">
+      <button id="sendBtn">Yuborish</button>
+    </div>
+  </section>
+</div>
+
+<div id="modal"><div id="panel">
+  <header><b>Boshqarish paneli</b><button class="ghost" onclick="closeAdmin()">✕</button></header>
+  <div id="tabs"></div><div id="adminBody"></div>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { me: null, users: {}, groups: [], current: null, chats: {}, unread: {}, pendingImg: null, adminOpen: false, tab: 'req', sig: '' };
+let cfg = {}; const cfgP = fetch('/config').then(r => r.json()).then(c => { cfg = c; if (c.dev) $('devForm').style.display = 'block'; });
+
+const h = (t, a = {}, ...c) => {
+  const e = document.createElement(t);
+  for (const [k, v] of Object.entries(a)) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on') || ['checked', 'value', 'disabled'].includes(k)) e[k] = v; else e.setAttribute(k, v);
+  }
+  c.flat().forEach(x => x != null && e.append(x)); return e;
+};
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Xato');
+  return d;
+}
+const COLORS = ['#e17076', '#e08a3c', '#9a7fe0', '#5fae4a', '#3fb4b8', '#4f9bd9', '#d9609b'];
+const colorOf = s => { let n = 0; for (const ch of String(s)) n = (n * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[n % COLORS.length]; };
+function avatar(name, pic, size = 44, group = false) {
+  if (pic) return h('img', { class: 'av', src: pic, referrerpolicy: 'no-referrer', style: `width:${size}px;height:${size}px` });
+  return h('div', { class: 'av', text: group ? '👥' : (String(name).trim()[0] || '?').toUpperCase(), style: `width:${size}px;height:${size}px;background:${colorOf(name)};font-size:${size * .42}px` });
+}
+const dmId = (a, b) => 'd:' + [a, b].sort().join(':');
+const userName = id => (S.users[id] || {}).name;
+
+// ---------- Ulanish ----------
+async function boot() {
+  const st = await (await fetch('/me')).json();
+  if (!st.me) { S.me = null; route(); return; }
+  onState(st); connect();
+}
+let es;
+function connect() {
+  if (es) es.close();
+  let opened = false;
+  es = new EventSource('/events');
+  es.addEventListener('state', e => onState(JSON.parse(e.data)));
+  es.addEventListener('message', e => onMessage(JSON.parse(e.data)));
+  es.onopen = () => { if (opened) { S.chats = {}; if (S.current) loadChat(S.current); } opened = true; };
+}
+function onState(st) {
+  S.me = st.me;
+  S.users = Object.fromEntries((st.users || []).map(u => [u.id, u]));
+  S.groups = st.groups || [];
+  if (S.current && !chatInfo(S.current)) closeChat();
+  route();
+  if (S.me.status === 'approved' && S.me.nameSet) { renderMe(); renderList(); renderHeader(); renderComposer(); renderAdmin(); }
+}
+function onMessage({ chat, msg }) {
+  if (S.chats[chat]) S.chats[chat].push(msg);
+  if (chat === S.current) { if (S.chats[chat]) renderMsgs(); }
+  else if (msg.from !== S.me.id) { S.unread[chat] = (S.unread[chat] || 0) + 1; renderList(); }
+}
+async function loadChat(chat) {
+  const r = await fetch('/history?chat=' + encodeURIComponent(chat)); if (!r.ok) return;
+  S.chats[chat] = (await r.json()).messages;
+  if (S.current === chat) renderMsgs(true);
+}
+function route() {
+  const m = S.me, show = { login: !m, name: m && m.status !== 'blocked' && !m.nameSet, wait: m && (m.status === 'blocked' || (m.nameSet && m.status === 'pending')), app: m && m.nameSet && m.status === 'approved' };
+  $('s-login').style.display = show.login ? 'flex' : 'none';
+  $('s-name').style.display = show.name ? 'flex' : 'none';
+  $('s-wait').style.display = show.wait ? 'flex' : 'none';
+  $('app').style.display = show.app ? 'flex' : 'none';
+  if (show.name && !$('nameInput').value) $('nameInput').value = m.name;
+  if (show.wait) {
+    const blocked = m.status === 'blocked';
+    $('waitTitle').textContent = blocked ? '⛔ Ruxsat yo\'q' : '⏳ Kutib turing';
+    $('waitText').textContent = blocked ? 'Chat egasi sizga kirish ruxsatini bermagan.' : 'So\'rovingiz egasiga yuborildi. Tasdiqlansa, bu sahifa o\'zi ochiladi.';
+  }
+}
+
+// ---------- Chap panel ----------
+function renderMe() {
+  $('meAv').replaceChildren(avatar(S.me.name, S.me.picture, 40));
+  $('meName').textContent = S.me.name;
+  $('meRole').textContent = S.me.isOwner ? 'Egasi' : (S.me.canWrite ? 'A\'zo' : 'Faqat o\'qiy oladi');
+  $('btnAdmin').style.display = S.me.isOwner ? '' : 'none';
+  const pend = Object.values(S.users).filter(u => u.status === 'pending').length;
+  $('pendN').style.display = pend ? '' : 'none'; $('pendN').textContent = pend;
+}
+function renderList() {
+  const box = $('list'); box.replaceChildren();
+  if (S.groups.length) box.append(h('div', { class: 'sec', text: 'Guruhlar' }));
+  S.groups.forEach(g => box.append(item('g:' + g.id, g.name, null, g.count + ' a\'zo', false, true)));
+  const people = Object.values(S.users).filter(u => !u.status || u.status === 'approved');
+  if (people.length) box.append(h('div', { class: 'sec', text: 'Shaxsiy yozishmalar' }));
+  people.forEach(u => box.append(item(dmId(S.me.id, u.id), u.name, u.picture, u.online ? 'onlayn' : 'oflayn', u.online, false)));
+  if (!S.groups.length && !people.length) box.append(h('div', { class: 'hint', text: 'Hali hech kim yo\'q. Egasi sizni guruhga qo\'shishini kuting.', style: 'padding:20px' }));
+}
+function item(key, name, pic, sub, on, group) {
+  return h('div', { class: 'item' + (key === S.current ? ' active' : ''), onclick: () => openChat(key) },
+    avatar(name, pic, 46, group),
+    h('div', { class: 't' }, h('b', { text: name }), h('small', { class: on ? 'on' : '', text: sub })),
+    S.unread[key] ? h('span', { class: 'badge', text: S.unread[key] }) : null);
+}
+
+// ---------- Chat ----------
+function chatInfo(chat) {
+  if (chat.startsWith('g:')) { const g = S.groups.find(x => 'g:' + x.id === chat); return g && { title: g.name, sub: g.count + ' a\'zo', av: avatar(g.name, null, 40, true) }; }
+  const [, a, b] = chat.split(':'), u = S.users[a === S.me.id ? b : a];
+  return u && { title: u.name, sub: u.online ? 'onlayn' : 'oflayn', av: avatar(u.name, u.picture, 40) };
+}
+function openChat(chat) {
+  S.current = chat; S.unread[chat] = 0; $('app').classList.add('chat-open');
+  renderList(); renderHeader(); renderMsgs(true); renderComposer();
+  if (!S.chats[chat]) loadChat(chat);
+  if (innerWidth > 700) $('text').focus();
+}
+function closeChat() { S.current = null; $('app').classList.remove('chat-open'); renderList(); renderHeader(); renderMsgs(); renderComposer(); }
+function renderHeader() {
+  const i = S.current && chatInfo(S.current);
+  $('chAv').replaceChildren(i ? i.av : ''); $('chTitle').textContent = i ? i.title : 'Suhbatni tanlang'; $('chSub').textContent = i ? i.sub : '';
+}
+function renderComposer() {
+  const can = S.current && (S.me.isOwner || S.me.canWrite);
+  $('bar').style.display = S.current ? 'flex' : 'none';
+  $('text').disabled = !can; $('sendBtn').disabled = !can; $('file').disabled = !can;
+  $('text').placeholder = can ? 'Xabar yozing...' : 'Sizga yozish ruxsati berilmagan';
+}
+let stick = true;
+function renderMsgs(force) {
+  const box = $('msgs'); stick = force || box.scrollHeight - box.scrollTop - box.clientHeight < 140;
+  box.replaceChildren();
+  if (!S.current) { box.append(h('div', { class: 'empty', text: 'Suhbatni tanlang' })); return; }
+  const list = S.chats[S.current] || [], isGroup = S.current.startsWith('g:');
+  if (!list.length && S.chats[S.current]) box.append(h('div', { class: 'empty', text: 'Hali xabar yo\'q. Birinchi bo\'lib yozing!' }));
+  list.forEach(m => {
+    const mine = m.from === S.me.id, b = h('div', { class: 'bubble' + (mine ? ' me' : '') });
+    if (isGroup && !mine) b.append(h('div', { class: 'w', text: userName(m.from) || m.fromName, style: 'color:' + colorOf(m.from) }));
+    if (m.image) b.append(h('img', { src: m.image, loading: 'lazy', onclick: () => window.open(m.image, '_blank'), onload: () => { if (stick) box.scrollTop = box.scrollHeight; } }));
+    if (m.text) b.append(document.createTextNode(m.text));
+    b.append(h('small', { text: new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }));
+    box.append(b);
+  });
+  if (stick) box.scrollTop = box.scrollHeight;
+}
+async function sendMsg() {
+  const text = $('text').value.trim();
+  if ((!text && !S.pendingImg) || !S.current) return;
+  $('sendBtn').disabled = true;
+  try { await post('/send', { chat: S.current, text, image: S.pendingImg }); $('text').value = ''; clearImg(); }
+  catch (e) { alert(e.message); }
+  $('sendBtn').disabled = false; $('text').focus();
+}
+function clearImg() { S.pendingImg = null; $('preview').style.display = 'none'; $('file').value = ''; }
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    if (file.type === 'image/gif') { if (file.size > 5e6) return rej(new Error('GIF 5 MB dan katta')); const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); return; }
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .85));
+    };
+    img.onerror = () => rej(new Error('Rasm ochilmadi')); img.src = URL.createObjectURL(file);
+  });
+}
+async function pickImage(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  try { S.pendingImg = await fileToDataUrl(file); $('prevImg').src = S.pendingImg; $('preview').style.display = 'flex'; $('text').focus(); }
+  catch (e) { alert(e.message); }
+}
+$('file').onchange = e => pickImage(e.target.files[0]);
+$('text').onkeydown = e => { if (e.key === 'Enter') sendMsg(); };
+$('text').onpaste = e => { const f = [...e.clipboardData.files][0]; if (f) { e.preventDefault(); pickImage(f); } };
+$('sendBtn').onclick = sendMsg;
+$('nameSave').onclick = () => post('/name', { name: $('nameInput').value }).catch(e => alert(e.message));
+$('nameInput').onkeydown = e => { if (e.key === 'Enter') $('nameSave').click(); };
+$('devForm').onsubmit = e => { e.preventDefault(); post('/auth/dev', { email: $('devEmail').value, name: $('devName').value }).then(boot).catch(e => alert(e.message)); };
+async function logout() { await post('/auth/logout').catch(() => {}); location.reload(); }
+
+// ---------- Egasi paneli ----------
+const adm = o => post('/admin', o).catch(e => alert(e.message));
+$('btnAdmin').onclick = () => { S.adminOpen = true; $('modal').style.display = 'flex'; renderAdmin(true); };
+function closeAdmin() { S.adminOpen = false; $('modal').style.display = 'none'; }
+function renderAdmin(force) {
+  if (!S.adminOpen) return;
+  const all = Object.values(S.users), pend = all.filter(u => u.status === 'pending'), people = all.filter(u => u.status !== 'pending');
+  const sig = JSON.stringify([all.map(u => [u.id, u.name, u.status, u.canWrite]), S.groups, S.tab]);
+  if (!force && sig === S.sig) return; S.sig = sig;
+  const tabs = $('tabs'); tabs.replaceChildren();
+  [['req', 'So\'rovlar' + (pend.length ? ' (' + pend.length + ')' : '')], ['ppl', 'Odamlar'], ['grp', 'Guruhlar']].forEach(([k, label]) =>
+    tabs.append(h('button', { class: S.tab === k ? 'on' : '', text: label, onclick: () => { S.tab = k; renderAdmin(true); } })));
+  const body = $('adminBody'); body.replaceChildren();
+  const who = u => h('div', { class: 't' }, h('b', { text: u.name }), h('small', { text: u.email }));
+  if (S.tab === 'req') {
+    if (!pend.length) body.append(h('div', { class: 'hint', text: 'Yangi so\'rovlar yo\'q.' }));
+    pend.forEach(u => body.append(h('div', { class: 'row' }, avatar(u.name, u.picture, 40), who(u),
+      h('button', { text: 'Qabul qilish', onclick: () => adm({ action: 'approve', userId: u.id }) }),
+      h('button', { class: 'ghost', text: 'Rad etish', onclick: () => adm({ action: 'block', userId: u.id }) }))));
+  } else if (S.tab === 'ppl') {
+    if (!people.length) body.append(h('div', { class: 'hint', text: 'Hali odamlar yo\'q.' }));
+    people.forEach(u => {
+      const blocked = u.status === 'blocked';
+      body.append(h('div', { class: 'row' }, avatar(u.name, u.picture, 40), who(u),
+        blocked ? null : h('label', { style: 'font-size:13px;white-space:nowrap' }, h('input', { type: 'checkbox', checked: u.canWrite, onchange: e => adm({ action: 'setWrite', userId: u.id, value: e.target.checked }) }), ' yoza oladi'),
+        blocked ? h('button', { text: 'Ruxsat berish', onclick: () => adm({ action: 'unblock', userId: u.id }) })
+                : h('button', { class: 'red', text: 'Bloklash', onclick: () => confirm(u.name + ' bloklansinmi?') && adm({ action: 'block', userId: u.id }) })));
+    });
+  } else {
+    const inp = h('input', { type: 'text', placeholder: 'Yangi guruh nomi', maxlength: 40 });
+    const create = () => { if (inp.value.trim()) adm({ action: 'createGroup', name: inp.value }); };
+    inp.onkeydown = e => e.key === 'Enter' && create();
+    body.append(h('div', { class: 'top', style: 'display:flex;gap:8px' }, inp, h('button', { text: '+ Yaratish', onclick: create })));
+    const eligible = all.filter(u => u.status === 'approved');
+    S.groups.forEach(g => {
+      const name = h('input', { type: 'text', value: g.name, maxlength: 40 });
+      const members = h('div', { class: 'members' });
+      eligible.forEach(u => members.append(h('label', {}, h('input', { type: 'checkbox', checked: g.members.includes(u.id), 'data-id': u.id,
+        onchange: () => adm({ action: 'setMembers', groupId: g.id, members: [...members.querySelectorAll('input:checked')].map(x => x.dataset.id) }) }), u.name)));
+      body.append(h('div', { class: 'gbox' },
+        h('div', { class: 'top' }, name, h('button', { class: 'ghost', text: 'Saqlash', onclick: () => adm({ action: 'renameGroup', groupId: g.id, name: name.value }) }),
+          h('button', { class: 'red', text: 'O\'chirish', onclick: () => confirm('"' + g.name + '" guruhi va uning xabarlari o\'chirilsinmi?') && adm({ action: 'deleteGroup', groupId: g.id }) })),
+        eligible.length ? members : h('div', { class: 'hint', text: 'Avval odamlarni qabul qiling.' })));
+    });
+  }
+}
+boot();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.onGoogleLibraryLoad()"></script>
+</body></html>
